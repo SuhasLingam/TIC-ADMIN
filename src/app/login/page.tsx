@@ -34,7 +34,7 @@ export default function LoginPage() {
                         <Lock className="w-5 h-5 opacity-60" />
                     </div>
                     <div className="flex justify-center mb-2">
-                        <Image src="/logo/ticlogo.svg" alt="TIC" width={56} height={28} className="h-7 w-auto dark:invert" />
+                        <Image src="/logo/ticlogo.svg" alt="TIC" priority unoptimized width={56} height={28} className="h-7 w-auto dark:invert" />
                     </div>
                     <p className="text-sm text-[var(--foreground)]/40 mt-1">Sign in to access the dashboard.</p>
                 </div>

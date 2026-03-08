@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   description: "Internal Dashboard for The Incite Crew",
   icons: [
     { rel: "icon", url: "/logo/ticlogo.svg", type: "image/svg+xml" },
+    { rel: "icon", url: "/logo/ticlogo.svg", sizes: "any" },
     { rel: "apple-touch-icon", url: "/logo/ticlogo.svg" },
   ],
 };

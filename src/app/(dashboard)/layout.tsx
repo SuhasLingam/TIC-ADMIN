@@ -40,6 +40,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <Image
                             src="/logo/ticlogo.svg"
                             alt="TIC Admin"
+                            priority
+                            unoptimized
                             width={60}
                             height={24}
                             className="h-6 w-auto dark:invert"
@@ -99,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 >
                     <Menu className="w-5 h-5" />
                 </button>
-                <Image src="/logo/ticlogo.svg" alt="TIC" width={44} height={20} className="h-5 w-auto dark:invert" />
+                <Image src="/logo/ticlogo.svg" alt="TIC" priority unoptimized width={44} height={20} className="h-5 w-auto dark:invert" />
                 <div className="w-9" />
             </header>
 
