@@ -27,13 +27,21 @@ export const applicationRouter = createTRPCRouter({
             return app ?? null;
         }),
 
-    // Update application status
     updateStatus: publicProcedure
-        .input(z.object({ id: z.number(), status: z.string() }))
+        .input(z.object({
+            id: z.number(),
+            status: z.string(),
+            assignedTier: z.string().optional(),
+            icpScore: z.number().optional(),
+        }))
         .mutation(async ({ ctx, input }) => {
             await ctx.db
                 .update(applications)
-                .set({ status: input.status })
+                .set({
+                    status: input.status,
+                    ...(input.assignedTier && { assignedTier: input.assignedTier }),
+                    ...(input.icpScore !== undefined && { icpScore: input.icpScore }),
+                })
                 .where(eq(applications.id, input.id));
             return { success: true };
         }),
@@ -47,7 +55,7 @@ export const applicationRouter = createTRPCRouter({
             });
             if (!app) throw new Error("Application not found");
 
-            await sendReviewEmail({ name: app.name, email: app.email, tier: app.tier });
+            await sendReviewEmail({ name: app.name ?? "Founder", email: app.email, tier: app.assignedTier ?? app.tierInterest ?? "Explorer" });
 
             // Update status to reviewed
             await ctx.db
@@ -60,25 +68,37 @@ export const applicationRouter = createTRPCRouter({
 
     // Send acceptance email to applicant
     sendAcceptanceEmail: publicProcedure
-        .input(z.object({ id: z.number(), calendlyLink: z.string().optional() }))
+        .input(z.object({
+            id: z.number(),
+            calendlyLink: z.string().optional(),
+            assignedTier: z.string().optional(),
+            icpScore: z.number().optional(),
+        }))
         .mutation(async ({ ctx, input }) => {
             const app = await ctx.db.query.applications.findFirst({
                 where: eq(applications.id, input.id),
             });
             if (!app) throw new Error("Application not found");
 
+            const finalTier = input.assignedTier ?? app.assignedTier ?? app.tierInterest ?? "Explorer";
+
             await sendDecisionEmail({
-                name: app.name,
+                name: app.name ?? "Founder",
                 email: app.email,
-                tier: app.tier,
+                tier: finalTier,
                 decision: "accepted",
                 calendlyLink: input.calendlyLink,
+                activationUrl: `${process.env.TIC_APP_URL ?? "http://localhost:3000"}/activate-membership?email=${encodeURIComponent(app.email)}&tier=${encodeURIComponent(finalTier)}`,
             });
 
             // Update status to approved
             await ctx.db
                 .update(applications)
-                .set({ status: "approved" })
+                .set({
+                    status: "approved",
+                    ...(input.assignedTier && { assignedTier: input.assignedTier }),
+                    ...(input.icpScore !== undefined && { icpScore: input.icpScore }),
+                })
                 .where(eq(applications.id, input.id));
 
             return { success: true };
@@ -94,9 +114,9 @@ export const applicationRouter = createTRPCRouter({
             if (!app) throw new Error("Application not found");
 
             await sendDecisionEmail({
-                name: app.name,
+                name: app.name ?? "Founder",
                 email: app.email,
-                tier: app.tier,
+                tier: app.assignedTier ?? app.tierInterest ?? "Explorer",
                 decision: "rejected",
             });
 
@@ -119,7 +139,7 @@ export const applicationRouter = createTRPCRouter({
             if (!app) throw new Error("Application not found");
 
             await sendCustomEmail({
-                name: app.name,
+                name: app.name ?? "Founder",
                 email: app.email,
                 subject: input.subject,
                 body: input.body,

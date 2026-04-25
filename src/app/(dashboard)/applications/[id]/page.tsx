@@ -4,7 +4,8 @@ import { api } from "~/trpc/react";
 import { use, useState } from "react";
 import {
     ArrowLeft, Loader2, Clock, CheckCircle2, XCircle, Send, PenLine,
-    Globe, FileText, Phone, Building2, Target, DollarSign, Mail
+    Globe, Building2, Target, Mail,
+    DollarSign
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -29,6 +30,10 @@ export default function ApplicationPage({ params }: { params: Promise<{ id: stri
     const [emailSent, setEmailSent] = useState<string | null>(null);
     const [customSubject, setCustomSubject] = useState("");
     const [customBody, setCustomBody] = useState("");
+
+    // New states for Acceptance overrides
+    const [assignedTier, setAssignedTier] = useState<string>("");
+    const [icpScore, setIcpScore] = useState<number | "">("");
 
     const utils = api.useUtils();
     const { data: app, isLoading } = api.application.getById.useQuery({ id: appId });
@@ -61,7 +66,8 @@ export default function ApplicationPage({ params }: { params: Promise<{ id: stri
     }
 
     const statusCfg = STATUS_CONFIG[app.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.pending;
-    const tierColor = TIER_CONFIG[app.tier] ?? "bg-[var(--foreground)]/10 text-[var(--foreground)] border-[var(--border)]";
+    const finalTier = app.assignedTier ?? app.tierInterest ?? "Explorer";
+    const tierColor = TIER_CONFIG[finalTier] ?? "bg-[var(--foreground)]/10 text-[var(--foreground)] border-[var(--border)]";
 
     return (
         <div className="w-full flex flex-col gap-6">
@@ -74,23 +80,23 @@ export default function ApplicationPage({ params }: { params: Promise<{ id: stri
             {/* ── Banner ────────────────────────────────────────────────────── */}
             <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
                 {/* Top accent strip */}
-                <div className={`h-1 w-full ${app.tier === "Trailblazer" ? "bg-purple-500" : app.tier === "Visionary" ? "bg-amber-400" : "bg-blue-500"}`} />
+                <div className={`h-1 w-full ${finalTier === "Trailblazer" ? "bg-purple-500" : finalTier === "Visionary" ? "bg-amber-400" : "bg-blue-500"}`} />
 
                 <div className="p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-6">
                     {/* Avatar */}
                     <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-heading flex-shrink-0
-            ${app.tier === "Trailblazer" ? "bg-purple-500/10 text-purple-400" :
-                            app.tier === "Visionary" ? "bg-amber-500/10 text-amber-400" :
+            ${finalTier === "Trailblazer" ? "bg-purple-500/10 text-purple-400" :
+                            finalTier === "Visionary" ? "bg-amber-500/10 text-amber-400" :
                                 "bg-blue-500/10 text-blue-400"}`}>
-                        {app.name[0]?.toUpperCase()}
+                        {(app.name ?? app.email)[0]?.toUpperCase()}
                     </div>
 
                     {/* Identity */}
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-2xl sm:text-3xl font-heading tracking-tight truncate">{app.name}</h1>
-                        <p className="text-sm text-[var(--foreground)]/50 mt-1">{app.startupName}</p>
+                        <h1 className="text-2xl sm:text-3xl font-heading tracking-tight truncate">{app.name ?? "Founder"}</h1>
+                        <p className="text-sm text-[var(--foreground)]/50 mt-1">{app.companyName ?? "No Company Provided"}</p>
                         <div className="flex items-center gap-2 mt-3 flex-wrap">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide border ${tierColor}`}>{app.tier}</span>
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide border ${tierColor}`}>{finalTier}</span>
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-wide border ${statusCfg.color}`}>{statusCfg.label}</span>
                         </div>
                     </div>
@@ -100,9 +106,6 @@ export default function ApplicationPage({ params }: { params: Promise<{ id: stri
                         <a href={`mailto:${app.email}`} className="flex items-center gap-2 hover:text-[var(--foreground)] transition-colors">
                             <Mail className="w-3.5 h-3.5" /> {app.email}
                         </a>
-                        <span className="flex items-center gap-2">
-                            <Phone className="w-3.5 h-3.5" /> {app.mobileNumber}
-                        </span>
                         <span className="text-[var(--foreground)]/30 text-[11px] mt-1">
                             Applied {format(app.createdAt, "MMM d, yyyy")}
                         </span>
@@ -120,29 +123,34 @@ export default function ApplicationPage({ params }: { params: Promise<{ id: stri
                     <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 sm:p-6">
                         <SectionTitle>Startup Details</SectionTitle>
                         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 gap-y-5 mt-4">
-                            <Fact icon={<Target className="w-3.5 h-3.5" />} label="Stage" value={app.founderStage} />
-                            <Fact icon={<DollarSign className="w-3.5 h-3.5" />} label="Monthly Revenue" value={app.monthlyRevenue ?? "—"} />
+                            <Fact icon={<Target className="w-3.5 h-3.5" />} label="Stage" value={app.startupStage ?? "—"} />
+                            <Fact icon={<DollarSign className="w-3.5 h-3.5" />} label="Traction" value={app.traction ?? "—"} />
+                            <Fact icon={<DollarSign className="w-3.5 h-3.5" />} label="Team Size" value={app.teamSize ?? "—"} />
+                            <Fact icon={<DollarSign className="w-3.5 h-3.5" />} label="ICP Score" value={app.icpScore ? `${app.icpScore}/20` : "Not Scored"} />
                             {app.website && (
                                 <Fact icon={<Globe className="w-3.5 h-3.5" />} label="Website" value={app.website} isLink />
                             )}
-                            {app.pitchDeck && (
-                                <Fact icon={<FileText className="w-3.5 h-3.5" />} label="Pitch Deck" value="View →" isLink href={app.pitchDeck} />
-                            )}
-                            <Fact icon={<Building2 className="w-3.5 h-3.5" />} label="Company" value={app.startupName} />
+                            <Fact icon={<Building2 className="w-3.5 h-3.5" />} label="Company" value={app.companyName ?? "—"} />
                         </div>
                     </div>
 
-                    {/* Primary Goal */}
-                    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 sm:p-6">
-                        <SectionTitle>Primary Goal</SectionTitle>
-                        <p className="text-sm text-[var(--foreground)]/80 leading-relaxed mt-3">{app.primaryGoal}</p>
+                    {/* Operational Vectors */}
+                    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 sm:p-6 flex flex-col gap-6">
+                        <div>
+                            <SectionTitle>Building Context</SectionTitle>
+                            <p className="text-sm text-[var(--foreground)]/80 leading-[1.6] mt-3 whitespace-pre-wrap break-words">{app.buildingContext ?? "—"}</p>
+                        </div>
+                        <div>
+                            <SectionTitle>Current Challenge</SectionTitle>
+                            <p className="text-sm text-[var(--foreground)]/80 leading-[1.6] mt-3 whitespace-pre-wrap break-all">{app.currentChallenge ?? "—"}</p>
+                        </div>
                     </div>
 
-                    {/* Overview */}
+                    {/* Fit Signals */}
                     <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 sm:p-6">
-                        <SectionTitle>Founder&apos;s Overview</SectionTitle>
+                        <SectionTitle>Why TIC?</SectionTitle>
                         <p className="text-sm text-[var(--foreground)]/80 leading-[1.8] mt-3 whitespace-pre-wrap">
-                            {app.overview}
+                            {app.whyTic ?? "—"}
                         </p>
                     </div>
                 </div>
@@ -174,8 +182,29 @@ export default function ApplicationPage({ params }: { params: Promise<{ id: stri
 
                             {/* Acceptance */}
                             <div className="rounded-xl border border-[var(--border)] p-3 space-y-2">
-                                <div className="flex items-center gap-2 text-xs font-medium text-green-500">
-                                    <CheckCircle2 className="w-3.5 h-3.5" /> Acceptance
+                                <div className="flex items-center gap-2 text-xs font-medium text-green-500 mb-2">
+                                    <CheckCircle2 className="w-3.5 h-3.5" /> Acceptance Matrix
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <select
+                                        value={assignedTier}
+                                        onChange={(e) => setAssignedTier(e.target.value)}
+                                        className="w-full bg-[var(--foreground)]/5 border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--foreground)] outline-none"
+                                    >
+                                        <option value="" disabled>Assign Tier...</option>
+                                        <option value="Explorer">Explorer</option>
+                                        <option value="Visionary">Visionary</option>
+                                        <option value="Trailblazer">Trailblazer</option>
+                                    </select>
+                                    <input
+                                        type="number"
+                                        placeholder="ICP Score (0-20)"
+                                        value={icpScore}
+                                        min={0}
+                                        max={20}
+                                        onChange={(e) => setIcpScore(e.target.value ? parseInt(e.target.value) : "")}
+                                        className="w-full bg-[var(--foreground)]/5 border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--foreground)] placeholder:text-[var(--foreground)]/40 outline-none"
+                                    />
                                 </div>
                                 <input
                                     type="url"
@@ -185,9 +214,14 @@ export default function ApplicationPage({ params }: { params: Promise<{ id: stri
                                     className="w-full bg-[var(--foreground)]/5 border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--foreground)] placeholder:text-[var(--foreground)]/30 outline-none"
                                 />
                                 <button
-                                    disabled={isMutating || app.status === "approved"}
-                                    onClick={() => sendAccept.mutate({ id: app.id, calendlyLink: calendlyLink || undefined })}
-                                    className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border border-green-500/20 bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                    disabled={isMutating || app.status === "approved" || !assignedTier}
+                                    onClick={() => sendAccept.mutate({
+                                        id: app.id,
+                                        calendlyLink: calendlyLink || undefined,
+                                        assignedTier: assignedTier || undefined,
+                                        icpScore: icpScore !== "" ? icpScore : undefined
+                                    })}
+                                    className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border border-green-500/20 bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-2"
                                 >
                                     {sendAccept.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
                                     Send & Approve

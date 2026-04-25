@@ -41,3 +41,11 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+.input-field {
+  @apply w-full rounded-xl border border-[var(--border)] bg-[var(--background)]
+    px-3.5 py-2.5 text-sm text-[var(--foreground)]
+    placeholder:text-[var(--foreground)]/30
+    outline-none focus:ring-1 focus:ring-zinc-900 dark:focus:ring-white
+    transition-shadow;
+}

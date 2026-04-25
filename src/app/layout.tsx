@@ -32,12 +32,14 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${neueMontreal.variable} ${nord.variable}`} suppressHydrationWarning>
-      <body className="antialiased font-sans transition-colors duration-500 ease-in-out min-h-screen">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <TRPCReactProvider>
-            {children}
-          </TRPCReactProvider>
-        </ThemeProvider>
+      <body suppressHydrationWarning className="antialiased font-sans transition-colors duration-500 ease-in-out min-h-screen">
+        <div suppressHydrationWarning>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+            <TRPCReactProvider>
+              {children}
+            </TRPCReactProvider>
+          </ThemeProvider>
+        </div>
       </body>
     </html>
   );

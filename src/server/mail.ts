@@ -10,17 +10,20 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendApplicationEmail(data: {
-    name: string;
+    name?: string;
     email: string;
-    mobileNumber: string;
-    startupName: string;
+    companyName?: string;
     website?: string;
-    pitchDeck?: string;
-    overview: string;
-    founderStage: string;
-    primaryGoal: string;
-    monthlyRevenue?: string;
-    tier: string;
+    role?: string;
+    startupStage?: string;
+    buildingContext?: string;
+    currentChallenge?: string;
+    ninetyDayFocus?: string;
+    traction?: string;
+    teamSize?: string;
+    whyTic?: string;
+    tierInterest?: string;
+    token: string;
 }) {
     // Collect recipients
     const recipients = [env.SMTP_USER];
@@ -30,17 +33,18 @@ export async function sendApplicationEmail(data: {
     }
 
     const tierColors: Record<string, string> = {
-        Explorer: "#6366f1", // Indigo
-        Visionary: "#a855f7", // Purple
-        Trailblazer: "#d4af37", // Gold
+        Explorer: "#6366f1",
+        Visionary: "#a855f7",
+        Trailblazer: "#d4af37",
     };
 
-    const accentColor = tierColors[data.tier] ?? "#000";
+    const tier = data.tierInterest ?? "Explorer";
+    const accentColor = tierColors[tier] ?? "#000";
 
     const mailOptions = {
         from: `"The Incite Crew" <${env.SMTP_USER}>`,
         to: recipients.join(", "),
-        subject: `[New Application] ${data.name} — ${data.tier}`,
+        subject: `[New Application] ${data.name ?? data.email} — ${tier}`,
         html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -68,7 +72,7 @@ export async function sendApplicationEmail(data: {
                                 <tr>
                                     <td style="padding-bottom: 32px;">
                                         <div style="display: inline-block; padding: 6px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; background-color: ${accentColor}15; color: ${accentColor}; border: 1px solid ${accentColor}30;">
-                                            ${data.tier} Tier
+                                            ${tier} Tier Interest
                                         </div>
                                     </td>
                                 </tr>
@@ -79,72 +83,56 @@ export async function sendApplicationEmail(data: {
                                     </td>
                                 </tr>
 
-                                <tr>
-                                    <td style="padding-bottom: 16px;">
-                                        <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Full Name</p>
-                                        <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.name}</p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-bottom: 16px;">
-                                        <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Email Address</p>
-                                        <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;"><a href="mailto:${data.email}" style="color: #09090b; text-decoration: underline;">${data.email}</a></p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-bottom: 16px;">
-                                        <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Mobile Number</p>
-                                        <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.mobileNumber}</p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-bottom: 16px;">
-                                        <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Startup / Project Name</p>
-                                        <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.startupName}</p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-bottom: 16px;">
-                                        <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Website / Product Link</p>
-                                        <p style="margin: 0; font-size: 15px; font-weight: 500;">
-                                            ${data.website ? `<a href="${data.website}" style="color: #2563eb; text-decoration: none;">${data.website}</a>` : "<span style='color: #a1a1aa;'>Not provided</span>"}
-                                        </p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-bottom: 16px;">
-                                        <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Pitch Deck</p>
-                                        <p style="margin: 0; font-size: 15px; font-weight: 500;">
-                                            ${data.pitchDeck ? `<a href="${data.pitchDeck}" style="color: #2563eb; text-decoration: none;">View Pitch Deck &rarr;</a>` : "<span style='color: #a1a1aa;'>Not provided</span>"}
-                                        </p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-bottom: 16px;">
-                                        <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Project / Startup Overview</p>
-                                        <div style="background-color: #fafafa; border: 1px solid #f4f4f5; border-radius: 8px; padding: 24px; font-size: 14px; color: #3f3f46; line-height: 1.6; border-left: 3px solid ${accentColor};">
-                                            ${data.overview.replace(/\n/g, '<br>')}
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-bottom: 16px;">
-                                        <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Stage of Founder</p>
-                                        <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.founderStage}</p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-bottom: 16px;">
-                                        <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Primary Goal</p>
-                                        <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.primaryGoal}</p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding-bottom: 32px;">
-                                        <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Monthly Revenue</p>
-                                        <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.monthlyRevenue ?? "Not provided"}</p>
-                                    </td>
-                                </tr>
+                                <tr><td style="padding-bottom: 16px;">
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Full Name</p>
+                                    <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.name ?? "Not provided"}</p>
+                                </td></tr>
+                                <tr><td style="padding-bottom: 16px;">
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Email Address</p>
+                                    <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;"><a href="mailto:${data.email}" style="color: #09090b; text-decoration: underline;">${data.email}</a></p>
+                                </td></tr>
+                                <tr><td style="padding-bottom: 16px;">
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Company / Startup</p>
+                                    <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.companyName ?? "Not provided"}</p>
+                                </td></tr>
+                                <tr><td style="padding-bottom: 16px;">
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Role</p>
+                                    <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.role ?? "Not provided"}</p>
+                                </td></tr>
+                                <tr><td style="padding-bottom: 16px;">
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Stage</p>
+                                    <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.startupStage ?? "Not provided"}</p>
+                                </td></tr>
+                                <tr><td style="padding-bottom: 16px;">
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Traction</p>
+                                    <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.traction ?? "Not provided"}</p>
+                                </td></tr>
+                                <tr><td style="padding-bottom: 16px;">
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Team Size</p>
+                                    <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.teamSize ?? "Not provided"}</p>
+                                </td></tr>
+                                <tr><td style="padding-bottom: 16px;">
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">What they're building</p>
+                                    <div style="background-color: #fafafa; border: 1px solid #f4f4f5; border-radius: 8px; padding: 16px; font-size: 14px; color: #3f3f46; line-height: 1.6; border-left: 3px solid ${accentColor};">
+                                        ${(data.buildingContext ?? "Not provided").replace(/\n/g, '<br>')}
+                                    </div>
+                                </td></tr>
+                                <tr><td style="padding-bottom: 16px;">
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Current Challenge</p>
+                                    <div style="background-color: #fafafa; border: 1px solid #f4f4f5; border-radius: 8px; padding: 16px; font-size: 14px; color: #3f3f46; line-height: 1.6;">
+                                        ${(data.currentChallenge ?? "Not provided").replace(/\n/g, '<br>')}
+                                    </div>
+                                </td></tr>
+                                <tr><td style="padding-bottom: 16px;">
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">90-Day Focus</p>
+                                    <p style="margin: 0; font-size: 15px; color: #09090b; font-weight: 500;">${data.ninetyDayFocus ?? "Not provided"}</p>
+                                </td></tr>
+                                <tr><td style="padding-bottom: 32px;">
+                                    <p style="margin: 0 0 4px 0; font-size: 12px; color: #71717a;">Why TIC?</p>
+                                    <div style="background-color: #fafafa; border: 1px solid #f4f4f5; border-radius: 8px; padding: 16px; font-size: 14px; color: #3f3f46; line-height: 1.6; border-left: 3px solid ${accentColor};">
+                                        ${(data.whyTic ?? "Not provided").replace(/\n/g, '<br>')}
+                                    </div>
+                                </td></tr>
                             </table>
                         </td>
                     </tr>
@@ -152,7 +140,7 @@ export async function sendApplicationEmail(data: {
                     <!-- FOOTER -->
                     <tr>
                         <td align="center" style="background-color: #fafafa; border-top: 1px solid #f4f4f5; padding: 24px;">
-                            <p style="margin: 0; color: #a1a1aa; font-size: 11px;">Securely processed by TIC Internal Systems.</p>
+                            <p style="margin: 0; color: #a1a1aa; font-size: 11px;">Token: ${data.token} · Securely processed by TIC Internal Systems.</p>
                         </td>
                     </tr>
                 </table>
@@ -166,6 +154,7 @@ export async function sendApplicationEmail(data: {
 
     return transporter.sendMail(mailOptions);
 }
+
 
 export async function sendConfirmationEmail(data: {
     name: string;
@@ -318,6 +307,7 @@ export async function sendDecisionEmail(data: {
     tier: string;
     decision: "accepted" | "rejected";
     calendlyLink?: string;
+    activationUrl?: string;
 }) {
     const isAccepted = data.decision === "accepted";
     const subject = isAccepted
@@ -356,10 +346,14 @@ export async function sendDecisionEmail(data: {
                             
                             ${isAccepted ? `
                             <p style="margin: 0 0 24px 0; font-size: 15px; color: #a1a1aa; line-height: 1.7;">
-                                Your application has been shortlisted. The next step is a brief conversation with our team to better understand your venture and goals.
+                                Congratulations — your application has been accepted into The Incite Crew as a <strong style="color: #ffffff;">${data.tier}</strong> member.
                             </p>
-                            <div style="margin-top: 32px; margin-bottom: 32px;">
-                                <a href="${data.calendlyLink ?? '#'}" style="display: inline-block; padding: 12px 24px; background-color: #ffffff; color: #000000; text-decoration: none; font-size: 13px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 4px;">Schedule Conversation</a>
+                            <p style="margin: 0 0 32px 0; font-size: 15px; color: #a1a1aa; line-height: 1.7;">
+                                Click the button below to activate your membership and access your Founder Dashboard.
+                            </p>
+                            <div style="margin-top: 32px; margin-bottom: 32px; display: flex; flex-direction: column; gap: 12px;">
+                                <a href="${data.activationUrl ?? 'https://incitecrew.com/activate-membership'}" style="display: inline-block; padding: 14px 28px; background-color: #ffffff; color: #000000; text-decoration: none; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 4px; margin-bottom: 12px;">Activate Membership &rarr;</a>
+                                ${data.calendlyLink ? `<br><a href="${data.calendlyLink}" style="display: inline-block; padding: 12px 24px; background-color: transparent; color: #a1a1aa; text-decoration: none; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; border: 1px solid #3f3f46; border-radius: 4px;">Schedule Intro Call</a>` : ''}
                             </div>
                             ` : `
                             <p style="margin: 0 0 24px 0; font-size: 15px; color: #a1a1aa; line-height: 1.7;">

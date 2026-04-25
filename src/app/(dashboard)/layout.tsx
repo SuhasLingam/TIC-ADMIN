@@ -1,116 +1,112 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { Mail, Users, Settings, Menu, X, LogOut } from "lucide-react";
+import { Mail, Users, Settings, Menu, LogOut, BarChart3, Calendar, Target, Rocket, Zap } from "lucide-react";
 import { ThemeToggle } from "~/components/ThemeToggle";
+import { RealtimeSync } from "~/components/RealtimeSync";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { logout } from "~/app/actions/auth";
 
+const NAV = [
+  { href: "/", icon: BarChart3, label: "Overview" },
+  { href: "/applications", icon: Mail, label: "Applications" },
+  { href: "/members", icon: Users, label: "Members" },
+  { href: "/events", icon: Calendar, label: "Events" },
+  { href: "/insights", icon: Target, label: "Insights" },
+  { href: "/opportunities", icon: Rocket, label: "Opportunities" },
+  { href: "/broadcast", icon: Zap, label: "Broadcast" },
+  { href: "/settings", icon: Settings, label: "Settings" },
+];
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [loggingOut, setLoggingOut] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const pathname = usePathname();
 
-    async function handleLogout() {
-        setLoggingOut(true);
-        await logout();
-    }
+  async function handleLogout() {
+    setLoggingOut(true);
+    await logout();
+  }
 
-    return (
-        <div className="min-h-screen relative">
+  const close = () => setSidebarOpen(false);
 
-            {/* Mobile backdrop */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black/40 z-20 lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
+  return (
+    <div className="min-h-screen bg-[var(--background)] flex">
+      <RealtimeSync />
 
-            {/* Sidebar — always fixed, pinned to viewport */}
-            <aside className={`
-        fixed inset-y-0 left-0 z-30
-        w-60 h-screen border-r border-[var(--border)] bg-[var(--surface)]
-        p-5 flex flex-col flex-shrink-0 overflow-y-auto
-        transform transition-transform duration-200
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={close} />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-30 w-56 flex flex-col
+        bg-[var(--surface)] border-r border-[var(--border)]
+        transform transition-transform duration-200 ease-out
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}>
-                <div className="mb-6 px-3 flex items-center justify-between">
-                    <div>
-                        <Image
-                            src="/logo/ticlogo.svg"
-                            alt="TIC Admin"
-                            priority
-                            unoptimized
-                            width={60}
-                            height={24}
-                            className="h-6 w-auto dark:invert"
-                        />
-                        <p className="text-[10px] text-[var(--foreground)]/40 uppercase tracking-widest mt-1.5">Internal Dashboard</p>
-                    </div>
-                    <button
-                        className="lg:hidden p-1 hover:bg-[var(--foreground)]/10 rounded-md"
-                        onClick={() => setSidebarOpen(false)}
-                    >
-                        <X className="w-4 h-4 opacity-60" />
-                    </button>
-                </div>
 
-                <nav className="flex-1 flex flex-col gap-1">
-                    <Link
-                        href="/"
-                        onClick={() => setSidebarOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[var(--foreground)]/5 transition-colors text-sm"
-                    >
-                        <Mail className="w-4 h-4 opacity-60" />
-                        Applications
-                    </Link>
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-md opacity-30 cursor-not-allowed text-sm">
-                        <Users className="w-4 h-4" />
-                        Users (Soon)
-                    </div>
-                    <Link
-                        href="/settings"
-                        onClick={() => setSidebarOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[var(--foreground)]/5 transition-colors text-sm"
-                    >
-                        <Settings className="w-4 h-4 opacity-60" />
-                        Settings
-                    </Link>
-                </nav>
+        {/* Nav links */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
+          {NAV.map(({ href, icon: Icon, label }) => {
+            const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={close}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                  ${active
+                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900"
+                    : "text-[var(--foreground)]/50 hover:text-[var(--foreground)] hover:bg-[var(--foreground)]/5"
+                  }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {label}
+              </Link>
+            );
+          })}
 
-                {/* Bottom — theme toggle + logout */}
-                <div className="border-t border-[var(--border)] pt-3 mt-auto flex flex-col gap-2">
-                    <ThemeToggle />
-                    <button
-                        onClick={handleLogout}
-                        disabled={loggingOut}
-                        className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-red-500/10 text-red-400/70 hover:text-red-400 transition-colors text-sm w-full disabled:opacity-40"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        {loggingOut ? "Signing out..." : "Sign out"}
-                    </button>
-                </div>
-            </aside>
+        </nav>
 
-            {/* Mobile top bar */}
-            <header className="lg:hidden fixed top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--surface)]">
-                <button
-                    onClick={() => setSidebarOpen(true)}
-                    className="p-2 hover:bg-[var(--foreground)]/10 rounded-md transition-colors"
-                >
-                    <Menu className="w-5 h-5" />
-                </button>
-                <Image src="/logo/ticlogo.svg" alt="TIC" priority unoptimized width={44} height={20} className="h-5 w-auto dark:invert" />
-                <div className="w-9" />
-            </header>
-
-            {/* Main content — offset by sidebar width on desktop, top bar on mobile */}
-            <main className="lg:pl-60 pt-0 lg:pt-0 min-h-screen">
-                <div className="p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8">
-                    {children}
-                </div>
-            </main>
+        {/* Footer */}
+        <div className="border-t border-[var(--border)] p-3 space-y-1">
+          <ThemeToggle />
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+              text-red-500/70 hover:text-red-500 hover:bg-red-500/8 dark:hover:bg-red-500/10
+              transition-colors disabled:opacity-40"
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            {loggingOut ? "Signing out…" : "Sign out"}
+          </button>
         </div>
-    );
+      </aside>
+
+      {/* Content */}
+      <div className="flex-1 flex flex-col min-h-screen lg:pl-56">
+
+        {/* Mobile top bar */}
+        <header className="lg:hidden sticky top-0 z-10 flex h-14 items-center justify-between px-4 bg-[var(--surface)] border-b border-[var(--border)]">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 hover:bg-[var(--foreground)]/10 rounded-lg transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <p className="text-[11px] font-bold uppercase tracking-widest">TIC Admin</p>
+          <div className="w-9" />
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 p-5 sm:p-7 lg:p-8">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
 }
